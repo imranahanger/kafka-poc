@@ -49,7 +49,55 @@ app.post('/', async (req, res) => {
 
     res.send('Message sent to Kafka!');
 });
+app.post('/approach2', async (req, res) => {
+    const payments = [
+        {
+            "mobileNumber": "1313123213",
+            "transactionId": "112321321",
+            "amount": 916
+        },
+        {
+            "mobileNumber": "2313123213",
+            "transactionId": "122321321",
+            "amount": 917
+        },
+        {
+            "mobileNumber": "3313123213",
+            "transactionId": "132321321",
+            "amount": 918
+        }
+    ];
 
+    const produceMessage = async (payment) => {
+        await producer.connect();
+
+        const topic = 'process-payment';
+
+        try {
+            await producer.send({
+                topic,
+                messages: [{ value: JSON.stringify(payment) }],
+            });
+            console.log(`Message sent: ${JSON.stringify(payment)}`);
+        } catch (error) {
+            console.error(`Error sending message: ${error.message}`);
+        } finally {
+            await producer.disconnect();
+        }
+    };
+
+    const produceAllMessages = async () => {
+        for (const payment of payments) {
+            await produceMessage(payment);
+            // Optional: Add a delay between messages if needed
+            // await delay(100);
+        }
+    };
+
+    produceAllMessages();
+
+    res.send('Messages sent to Kafka!');
+});
 app.post('/processpayment', async (req, res) => {
     console.log("----------------------------------")
     console.log(req.body)
